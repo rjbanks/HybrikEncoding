@@ -1,0 +1,107 @@
+{
+    "name": "{{Hybrik Watchfolder Example}}",
+    "payload": {
+        "elements": [
+            {
+                "uid": "watchfolder_source",
+                "kind": "watchfolder",
+                "task": {
+                    "tags": [
+                        "{{tag}}"
+                    ]
+                },
+                "payload": {
+                    "source": {
+                        "storage_provider": "s3",
+                        "path": "s3://{{bucket name}}"
+                    },
+                    "settings": {
+                        "key": "watch_folder",
+                        "frequency": 5,
+                        "pattern_matching": "wildcard",
+                        "wildcard": "*",
+                        "recursive": true,
+                        "ignore_preexisting_files": true
+                    }
+                }
+            },
+            {
+                "uid": "dolby_audio_encoder_mp4",
+                "kind": "dolby_audio_encoder",
+                "task": {
+                    "retry_method": "fail"
+                },
+                "payload": {
+                    "location": {
+                        "storage_provider": "s3",
+                        "path": "s3://{{bucket name}}"
+                    },
+                    "targets": [
+                        {
+                            "file_pattern": "{source_basename}.mp4",
+                            "existing_files": "replace",
+                            "container": {
+                                "kind": "mp4"
+                            },
+                            "audio": [
+                                {
+                                    "codec": "atmos",
+                                    "bitrate_kb": {{biterate}},
+                                    "filters": [
+                                        {
+                                            "audio_filter": {
+                                                "kind": "loudness",
+                                                "payload": {
+                                                    "metering_mode": "1770-4",
+                                                    "dialogue_intelligence": false,
+                                                    "speech_threshold": 100
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "audio_filter": {
+                                                "kind": "drc",
+                                                "payload": {
+                                                    "line_mode_drc_profile": "music_light",
+                                                    "rf_mode_drc_profile": "music_light"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "audio_filter": {
+                                                "kind": "downmix",
+                                                "payload": {
+                                                    "loro_center_mix_level": -3,
+                                                    "loro_surround_mix_level": -3,
+                                                    "ltrt_center_mix_level": -3,
+                                                    "ltrt_surround_mix_level": -3,
+                                                    "preferred_downmix_mode": "loro"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "connections": [
+            {
+                "from": [
+                    {
+                        "element": "watchfolder_source"
+                    }
+                ],
+                "to": {
+                    "success": [
+                        {
+                            "element": "dolby_audio_encoder_mp4"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
