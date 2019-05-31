@@ -1,2 +1,4 @@
-# HybrikEncoding
-Hybrik Encoding Templates
+# Hybrik Encoding
+Base Hybrik Encoding Templates for encoding Atmos music
+
+
