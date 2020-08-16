@@ -1,0 +1,51 @@
+{
+  "name": "example transcode WAV to ACC, ffmpeg",
+  "payload": {
+    "elements": [
+      {
+        "uid": "source_file",
+        "kind": "source",
+        "payload": {
+          "kind": "asset_url",
+          "payload": {
+            "storage_provider": "s3",
+            "url": "s3://encodesource/file_example_WAV_10MG.wav"
+          }
+        }
+      },
+      {
+        "uid": "transcode_task",
+        "kind": "transcode",
+        "payload": {
+          "location": {
+            "storage_provider": "s3",
+            "path": "s3://encodecomplete"
+          },
+          "targets": [
+            {
+              "file_pattern": "{source_basename}.mp4",
+              "existing_files": "replace",
+              "ffmpeg_args": "-c:a libfdk_aac -b:a 320k output.mp4"
+            }
+          ]
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": [
+          {
+            "element": "source_file"
+          }
+        ],
+        "to": {
+          "success": [
+            {
+              "element": "transcode_task"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
