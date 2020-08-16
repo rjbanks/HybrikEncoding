@@ -1,5 +1,9 @@
 {
-    "name": "{{Hybrik Watchfolder Example}}",
+    "definitions": {
+        "source_folder": "s3://<bucketname>",
+        "output_folder": "s3://<bucketnme>"
+    },
+    "name": "<job_name> - outputs 448, 768, 5.1, ac4",
     "payload": {
         "elements": [
             {
@@ -7,16 +11,16 @@
                 "kind": "watchfolder",
                 "task": {
                     "tags": [
-                        "{{tag}}"
+                    "WATCH_FOLDER"
                     ]
                 },
                 "payload": {
                     "source": {
                         "storage_provider": "s3",
-                        "path": "s3://{{bucket name}}"
+                        "path": "{{source_folder}}"
                     },
                     "settings": {
-                        "key": "watch_folder",
+                        "key": "watch_folder_all",
                         "frequency": 5,
                         "pattern_matching": "wildcard",
                         "wildcard": "*",
@@ -26,31 +30,35 @@
                 }
             },
             {
-                "uid": "dolby_audio_encoder_mp4",
+                "uid": "ddp_joc_mp4_448",
                 "kind": "dolby_audio_encoder",
                 "task": {
-                    "retry_method": "fail"
+                    "retry_method": "retry",
+                    "retry": {
+                        "count": 5,
+                        "delay_sec": 60
+                    }
                 },
                 "payload": {
                     "location": {
                         "storage_provider": "s3",
-                        "path": "s3://{{bucket name}}"
+                        "path": "{{output_folder}}"
                     },
                     "targets": [
                         {
-                            "file_pattern": "{source_basename}.mp4",
+                            "file_pattern": "{source_basename}_joc_448.mp4",
                             "existing_files": "replace",
                             "container": {
                                 "kind": "mp4"
                             },
                             "audio": [
                                 {
-                                    "codec": "atmos",
-                                    "bitrate_kb": {{biterate}},
+                                    "codec": "ddp_joc",
+                                    "bitrate_kb": 448,
                                     "filters": [
                                         {
                                             "audio_filter": {
-                                                "kind": "loudness",
+                                                "kind": "loudness_measurement",
                                                 "payload": {
                                                     "metering_mode": "1770-4",
                                                     "dialogue_intelligence": false,
@@ -84,7 +92,173 @@
                             ]
                         }
                     ]
-                }
+                },
+                "name": "ddp_joc_mp4_448"
+            },
+            {
+                "uid": "ddp_joc_mp4_768",
+                "kind": "dolby_audio_encoder",
+                "task": {
+                    "retry_method": "retry",
+                    "retry": {
+                        "count": 5,
+                        "delay_sec": 60
+                    }
+                },
+                "payload": {
+                    "location": {
+                        "storage_provider": "s3",
+                        "path": "{{output_folder}}"
+                    },
+                    "targets": [
+                        {
+                            "file_pattern": "{source_basename}_joc_768.mp4",
+                            "existing_files": "replace",
+                            "container": {
+                                "kind": "mp4"
+                            },
+                            "audio": [
+                                {
+                                    "codec": "ddp_joc",
+                                    "bitrate_kb": 768,
+                                    "filters": [
+                                        {
+                                            "audio_filter": {
+                                                "kind": "loudness_measurement",
+                                                "payload": {
+                                                    "metering_mode": "1770-4",
+                                                    "dialogue_intelligence": false,
+                                                    "speech_threshold": 100
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "audio_filter": {
+                                                "kind": "drc",
+                                                "payload": {
+                                                    "line_mode_drc_profile": "music_light",
+                                                    "rf_mode_drc_profile": "music_light"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "audio_filter": {
+                                                "kind": "downmix",
+                                                "payload": {
+                                                    "loro_center_mix_level": -3,
+                                                    "loro_surround_mix_level": -3,
+                                                    "ltrt_center_mix_level": -3,
+                                                    "ltrt_surround_mix_level": -3,
+                                                    "preferred_downmix_mode": "loro"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "name": "ddp_joc_mp4_768"
+            },
+            {
+                "uid": "ddp_downmix_mp4",
+                "kind": "dolby_audio_encoder",
+                "task": {
+                    "retry_method": "retry",
+                    "retry": {
+                        "count": 5,
+                        "delay_sec": 60
+                    }
+                },
+                "payload": {
+                    "location": {
+                        "storage_provider": "s3",
+                        "path": "{{output_folder}}"
+                    },
+                    "targets": [
+                        {
+                            "file_pattern": "{source_basename}_dmix.mp4",
+                            "existing_files": "replace",
+                            "container": {
+                                "kind": "mp4"
+                            },
+                            "audio": [
+                                {
+                                    "codec": "ddp_5.1_atmos_downmix",
+                                    "bitrate_kb": 256,
+                                    "filters": [
+                                        {
+                                            "audio_filter": {
+                                                "kind": "loudness_measurement",
+                                                "payload": {
+                                                    "metering_mode": "1770-3",
+                                                    "dialogue_intelligence": false,
+                                                    "speech_threshold": 100
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "audio_filter": {
+                                                "kind": "drc",
+                                                "payload": {
+                                                    "line_mode_drc_profile": "music_light",
+                                                    "rf_mode_drc_profile": "music_light"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "audio_filter": {
+                                                "kind": "downmix",
+                                                "payload": {
+                                                    "loro_center_mix_level": -3,
+                                                    "loro_surround_mix_level": -3,
+                                                    "ltrt_center_mix_level": -3,
+                                                    "ltrt_surround_mix_level": -3,
+                                                    "preferred_downmix_mode": "loro"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "name": "ddp_downmix_mp4"
+            },
+            {
+                "uid": "ac4_ims_mp4",
+                "kind": "dolby_audio_encoder",
+                "task": {
+                    "retry_method": "retry",
+                    "retry": {
+                        "count": 5,
+                        "delay_sec": 60
+                    }
+                },
+                "payload": {
+                    "location": {
+                        "storage_provider": "s3",
+                        "path": "{{output_folder}}"
+                    },
+                    "targets": [
+                        {
+                            "file_pattern": "{source_basename}_ac4.mp4",
+                            "existing_files": "replace",
+                            "container": {
+                                "kind": "mp4"
+                            },
+                            "audio": [
+                                {
+                                    "codec": "ac4_ims",
+                                    "bitrate_kb": 256
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "name": "ac4_ims_mp4"
             }
         ],
         "connections": [
@@ -97,7 +271,16 @@
                 "to": {
                     "success": [
                         {
-                            "element": "dolby_audio_encoder_mp4"
+                            "element": "ddp_joc_mp4_448"
+                        },
+                        {
+                            "element": "ddp_joc_mp4_768"
+                        },
+                        {
+                            "element": "ddp_downmix_mp4"
+                        },
+                        {
+                            "element": "ac4_ims_mp4"
                         }
                     ]
                 }
